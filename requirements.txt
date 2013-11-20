@@ -6,3 +6,4 @@ apt:
 
 pip:
   - pyyaml
+  - pytest (for tests only)
