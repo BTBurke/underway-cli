@@ -141,3 +141,13 @@ def test_compiler_include_filter_errors():
 		t = TopoCompiler(world).compile(world['root'])
 		assert ce.code == 404.5 #regex returns nothing
 
+def test_compiler_newer_values_supersede():
+	"""
+	A subesequent key:value pair should override an earlier included key:value
+	"""
+	s = {'test': {'include': 'test', 'name': 'Subsequent Name'}}
+	world = {'root': s, 'test': {'name': 'included name'}}
+	t = TopoCompiler(world).compile(world['root'])
+	assert t == {'test': {'name': 'Subsequent Name'}}
+
+	
