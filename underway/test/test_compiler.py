@@ -1,4 +1,4 @@
-from underway.compiler import CompileError, TopoCompiler
+from underway.topology.compiler import CompileError, TopoCompiler
 import pytest
 
 def test_compiler_CompileError_raise():
@@ -102,4 +102,42 @@ def test_compiler_include_with_extraction():
 	world = {'root': s, 'test': [{'name': 'included_string', 'value': 'included_value'}]}
 	t = TopoCompiler(world).compile(world['root'])
 	assert t == {'test': {'list': ['string1', 'included_value', 'string2']}}
+
+def test_compiler_include_filter_errors():
+	"""
+	Compiler should fail on multiple conditions when there are problems with a recursive include:
+	- Filter returns more than one result 
+	- Extraction key does not exist
+	- Filter returns no matches
+	- Malformed include name
+	"""
+	# Too many results from filter
+	s = {'test': {'include': 'test_inc[name: multiple]'}}
+	world = {'root': s, 'test_inc': [{'name': 'multiple'}, {'name': 'multiple'}]}
+	with pytest.raises(CompileError) as ce:
+		t = TopoCompiler(world).compile(world['root'])
+		assert ce.code == 404.7
+	# Extraction key doesn't exist
+	s = {'test': {'include': 'test_inc[name: multiple][noexist]'}}
+	world = {'root': s, 'test_inc': [{'name': 'multiple'}]}
+	with pytest.raises(CompileError) as ce:
+		t = TopoCompiler(world).compile(world['root'])
+		assert ce.code == 404.8
+	# No matches
+	s = {'test': {'include': 'test_inc[name: noexist]'}}
+	world = {'root': s, 'test_inc': [{'name': 'multiple'}]}
+	with pytest.raises(CompileError) as ce:
+		t = TopoCompiler(world).compile(world['root'])
+		assert ce.code == 404.6
+	# Bad name. Multiple codes this can fail under depending on type of error and regex interaction.
+	s = {'test': {'include': 'test$inc[name: noexist]'}}
+	world = {'root': s, 'test_inc': [{'name': 'multiple'}]}
+	with pytest.raises(CompileError) as ce:
+		t = TopoCompiler(world).compile(world['root'])
+		assert ce.code == 404.6 #regex returns something but doesn't find a match
+	s = {'test': {'include': '...[name: noexist]'}}
+	world = {'root': s, 'test_inc': [{'name': 'multiple'}]}
+	with pytest.raises(CompileError) as ce:
+		t = TopoCompiler(world).compile(world['root'])
+		assert ce.code == 404.5 #regex returns nothing
 

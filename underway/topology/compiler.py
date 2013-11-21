@@ -33,32 +33,32 @@ class TopoCompiler(object):
 		match = r_extraction.search(inc)
 		if match and len(match.groups())==4:
 			(inc_file, filterkey, filtervalue, extractionkey) = match.groups()
-			print "RE 4 Match on " +inc+ ": (%s, %s, %s, %s)" % (inc_file, filterkey, filtervalue, extractionkey)
+			#print "RE 4 Match on " +inc+ ": (%s, %s, %s, %s)" % (inc_file, filterkey, filtervalue, extractionkey)
 		else:
 			match = r_include.search(inc)
 			if match and len(match.groups())==3:
 				(inc_file, filterkey, filtervalue) = match.groups()
-				print "RE 3 match on " +inc+ ": (%s, %s, %s)" % (inc_file, filterkey, filtervalue)
+				#print "RE 3 match on " +inc+ ": (%s, %s, %s)" % (inc_file, filterkey, filtervalue)
 			else:
 				match = r_fname.search(inc)
 				if match and len(match.groups())==1:
 					inc_file = match.groups()
 					if type(inc_file) == type((1,2)):
 						inc_file = inc_file[0]
-					print "RE 1 match on " +inc+ ": (%s)" % inc_file
+					#print "RE 1 match on " +inc+ ": (%s)" % inc_file
 				else:
-					raise CompileError(msg='Included file with spec = %s did not yield any match to a topology file.' % inc, code = 404.5)
+					raise CompileError(msg='Included file with spec = %s did not yield any match to a topology file. This is probably a malformed name for the include file.' % inc, code = 404.5)
 
 
 		if inc_file in self.world.keys():
 			if filterkey:
 				filt = self._make_filter(filterkey, filtervalue)
 				filt_result = self._filter_list(filt, self.world[inc_file])
-				print "filt results: ", filt_result
+				#print "filt results: ", filt_result
 				if len(filt_result) == 0:
 					raise CompileError(msg='Included file with filter spec = %s resulted in no matches.' % inc, code = 404.6)
 				elif len(filt_result) > 1:
-					raise CompileError(msg='Included file with filter spec = %s resulted in multiple matches. Cannot continue.' % inc, code = 404.7)
+					raise CompileError(msg='Included file with filter spec = %s resulted in multiple matches.' % inc, code = 404.7)
 				else:
 					filt_result = filt_result[0]
 				if extractionkey:
@@ -71,7 +71,7 @@ class TopoCompiler(object):
 
 			return self.compile(self.world[inc_file])
 		else:
-			print "Couldn't find %s in %s" % (inc_file, self.world.keys())
+			#print "Couldn't find %s in %s" % (inc_file, self.world.keys())
 			raise CompileError(msg='Included topology file %s not found.' % inc, code=404.4)
 
 	def _process_list(self, l):
@@ -102,13 +102,14 @@ class TopoCompiler(object):
 
 		out = {}
 		for (k, v) in d.items():
-			print (k, v)
+			#print (k, v)
 			if k == 'include':
 				d_insert = self._get_include(v)
 				if type(d_insert) == type({}):
 					out.update(d_insert)
 				else:
-					# This return is useful when a filter and extraction key results only in a string to be included in a list
+					# This return is useful when a filter and extraction key results only 
+					# in a string to be included in a list
 					return d_insert
 			else:
 				if type(v) == type({}):
